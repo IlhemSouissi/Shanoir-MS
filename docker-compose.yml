@@ -12,37 +12,7 @@
 
 version: '3'
 services:
-  #
-  # Keycloak: database and service
-  #
-  keycloak-database:
-    container_name: "${SHANOIR_PREFIX}keycloak-database"
-    build: ./docker-compose/keycloak-database
-    environment:
-      - MYSQL_DATABASE=keycloak
-    volumes:
-      - "keycloak-database-data:/var/lib/mysql"
-    networks:
-      - shanoir_ng_network
-  keycloak:
-    container_name: "${SHANOIR_PREFIX}keycloak"
-    environment:
-      - SHANOIR_ADMIN_EMAIL
-      - SHANOIR_ADMIN_NAME
-      - SHANOIR_URL_HOST
-      - SHANOIR_URL_SCHEME
-      - SHANOIR_SMTP_HOST
-      - SHANOIR_MIGRATION
-      - SHANOIR_KEYCLOAK_USER
-      - SHANOIR_KEYCLOAK_PASSWORD
-      - SHANOIR_ALLOWED_ADMIN_IPS
-    build: ./docker-compose/keycloak
-    networks:
-      - shanoir_ng_network
-    ports:
-      - "8080:8080"
-    depends_on:
-      - "keycloak-database"
+  
   #
   # RabbitMQ: inter-microservices communication
   #  
@@ -56,20 +26,7 @@ services:
      - "15672:15672"
     networks:
       - shanoir_ng_network 
-  #
-  # Database for all other microservices
-  #
-  database:
-    container_name: "${SHANOIR_PREFIX}database"
-    build: ./docker-compose/database
-    env_file:
-      - ./docker-compose/database/variables.env
-    volumes:
-      - "database-data:/var/lib/mysql"
-    ports:
-     - "3307:3306"
-    networks:
-      - shanoir_ng_network
+  
   #
   # Users microservice
   #
@@ -88,15 +45,13 @@ services:
       - SHANOIR_PREFIX
     volumes:
       - "logs:/var/log/shanoir-ng-logs"
-      - certificate-share-data:/etc/ssl/certs/java
+        # - certificate-share-data:/etc/ssl/certs/java
     networks:
       - shanoir_ng_network
     ports:
      - "9901:9901"
      - "9911:9911"
     depends_on:
-      - "keycloak"
-      - "database"
       - "rabbitmq"
   #
   # Studies microservice
@@ -111,7 +66,7 @@ services:
       - SHANOIR_PREFIX
     volumes:
       - "logs:/var/log/shanoir-ng-logs"
-      - certificate-share-data:/etc/ssl/certs/java:ro
+        # - certificate-share-data:/etc/ssl/certs/java:ro
       - "datasets-data:/var/datasets-data"
       - "studies-data:/var/studies-data"
       - "tmp:/tmp"
@@ -121,8 +76,6 @@ services:
      - "9902:9902"
      - "9912:9912"
     depends_on:
-      - "keycloak"
-      - "database"
       - "rabbitmq"
       - "users"
   #
@@ -138,7 +91,7 @@ services:
       - SHANOIR_PREFIX
     volumes:
       - "logs:/var/log/shanoir-ng-logs"
-      - certificate-share-data:/etc/ssl/certs/java:ro
+        # - certificate-share-data:/etc/ssl/certs/java:ro
       - "tmp:/tmp"
     networks:
       - shanoir_ng_network
@@ -146,8 +99,6 @@ services:
      - "9903:9903"
      - "9913:9913"
     depends_on:
-      - "keycloak"
-      - "database"
       - "rabbitmq"
       - "users"
   #
@@ -163,7 +114,7 @@ services:
       - SHANOIR_PREFIX
     volumes:
       - "logs:/var/log/shanoir-ng-logs"
-      - certificate-share-data:/etc/ssl/certs/java:ro
+        # - certificate-share-data:/etc/ssl/certs/java:ro
       - "tmp:/tmp"
       - "datasets-data:/var/datasets-data"
     networks:
@@ -172,8 +123,6 @@ services:
      - "9904:9904"
      - "9914:9914"
     depends_on:
-      - "keycloak"
-      - "database"
       - "rabbitmq"
       - "users"
 
@@ -187,7 +136,7 @@ services:
       - SHANOIR_PREFIX
     volumes:
       - "logs:/var/log/shanoir-ng-logs"
-      - certificate-share-data:/etc/ssl/certs/java
+        # - certificate-share-data:/etc/ssl/certs/java
       - "tmp:/tmp"
     networks:
       - shanoir_ng_network
@@ -195,8 +144,6 @@ services:
      - "9909:9909"
      - "9915:9915"
     depends_on:
-      - "keycloak"
-      - "database"
       - "rabbitmq"
       - "users"
   #
@@ -287,39 +234,9 @@ services:
     volumes:
       - "dcm4chee-arc-wildfly-data:/opt/wildfly/standalone"
       - "dcm4chee-arc-storage-data:/storage"
-  #
-  # Nginx
-  #
-  nginx:
-    container_name: shanoir-ng-nginx
-    build: ./docker-compose/nginx
-    environment:
-      - SHANOIR_PREFIX
-      - SHANOIR_URL_HOST
-      - SHANOIR_URL_SCHEME
-      - SHANOIR_X_FORWARDED
-      - SHANOIR_INSTANCE_NAME
-      - SHANOIR_INSTANCE_COLOR
-    volumes:
-      - "logs:/var/log/nginx"
-      - certificate-share-data:/opt/ssl:ro
-    networks:
-      - shanoir_ng_network
-    ports:
-     - "443:443"
-    depends_on:
-      - "keycloak"
-      - "users"
-      - "studies"
-      - "import"
-      - "datasets"
-      - "dcm4chee-arc"
-      - "rabbitmq"
 
 volumes:
-  keycloak-database-data:
   rabbitmq-data:
-  database-data:
   datasets-data:
   studies-data:
   dcm4chee-ldap-data:
@@ -327,8 +244,8 @@ volumes:
   dcm4chee-database-data:
   dcm4chee-arc-wildfly-data:
   dcm4chee-arc-storage-data:
+      #certificate-share-data:
   solr-data:
-  certificate-share-data:
   tmp:
   logs:
 

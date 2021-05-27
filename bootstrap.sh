@@ -31,7 +31,7 @@ wait_tcp_ready()
 
 	docker-compose exec -T "$container" bash -c "
 	(	set -e
-		while true; do 
+		while true; do
 			if true < '/dev/tcp/localhost/$tcp_port' ; then
 				echo 'connected to $container port $tcp_port'
 				exit 0
@@ -111,7 +111,7 @@ if [ -n "$deploy" ] ; then
 	else
 		# overwrite (--force)
 		# -> just remove all existing containers
-		# 
+		#
 		# Note: we must ensure that all containers are removed because:
 		# - 'docker-compose run' should not be used when the
 		#   corresponding service is up
@@ -125,21 +125,6 @@ if [ -n "$deploy" ] ; then
 	# Deploy stage
 	#
 
-	# 1. databases
-	step "init: database keycloak-database"
-	docker-compose up -d database keycloak-database
-	wait_tcp_ready database          3306
-	wait_tcp_ready keycloak-database 3306
-
-	# 2. keycloak
-	step "init: keycloak"
-	docker-compose run --rm -e SHANOIR_MIGRATION=init keycloak
-
-	step "start: keycloak"
-	docker-compose up -d keycloak
-	utils/oneshot	'\| *JBoss Bootstrap Environment'				\
-			' INFO  \[org.jboss.as\] .* Keycloak .* started in [0-9]*ms'	\
-			-- docker-compose logs --no-color --follow keycloak >/dev/null
 
 	# 3. infrastructure services
 	step "start: infrastructure services"
@@ -148,10 +133,10 @@ if [ -n "$deploy" ] ; then
 		step "start: $infra_ms infrastructure microservice"
 		docker-compose up -d "$infra_ms"
 	done
-	
+
 	# 4. Shanoir-NG microservices
 	step "start: sh-ng microservices"
-	for ms in users studies datasets import preclinical 
+	for ms in users studies datasets import preclinical
 	do
 		step "init: $ms microservice"
 		docker-compose run --rm -e SHANOIR_MIGRATION=init "$ms"
@@ -159,8 +144,5 @@ if [ -n "$deploy" ] ; then
 		docker-compose up -d "$ms"
 	done
 
-	# 5. nginx
-	step "start: nginx"
-	docker-compose up -d nginx
 fi
 
